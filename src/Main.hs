@@ -37,6 +37,20 @@ printUsage = do
     putStrLn $ "for example: " ++ progName ++ " bitcoin ethereum"
 
 
+printCurrencyRatio :: Currency -> Currency -> IO ()
+printCurrencyRatio c1 c2 = do
+    let (by_usd, by_btc) = currencyRatio c1 c2
+    putStrLn $ "by USD price: 1 " ++ symbol c1 ++ " = " ++ show by_usd ++ " " ++ symbol c2
+    putStrLn $ "by BTC price: 1 " ++ symbol c1 ++ " = " ++ show by_btc ++ " " ++ symbol c2
+
+
+printUSDPrices :: Currency -> Currency -> IO ()
+printUSDPrices c1 c2 = do
+    putStrLn "\nFiat prices:"
+    putStrLn $ symbol c1 ++ ": " ++ price_usd c1 ++ " USD"
+    putStrLn $ symbol c2 ++ ": " ++ price_usd c2 ++ " USD"
+
+
 getCurrencyInfo :: String -> IO (Either String Currency)
 getCurrencyInfo currency_id = do
     let uri = "https://api.coinmarketcap.com/v1/ticker/" ++ currency_id ++ "/"
@@ -61,14 +75,12 @@ mkComparison cid1 cid2 = do
     a1 <- async $ getCurrencyInfo cid1
     a2 <- async $ getCurrencyInfo cid2
     result <- waitBoth a1 a2
-
     case result of
         (Left e1, _) -> putStrLn $ "Failed to get info for: " ++ cid1
         (_, Left e2) -> putStrLn $ "Failed to get info for: " ++ cid2
         (Right c1, Right c2) -> do
-            let (by_usd, by_btc) = currencyRatio c1 c2
-            putStrLn $ "by USD price: 1 " ++ symbol c1 ++ " = " ++ show by_usd ++ " " ++ symbol c2
-            putStrLn $ "by BTC price: 1 " ++ symbol c1 ++ " = " ++ show by_btc ++ " " ++ symbol c2
+            printCurrencyRatio c1 c2
+            printUSDPrices c1 c2
 
 
 main :: IO ()
